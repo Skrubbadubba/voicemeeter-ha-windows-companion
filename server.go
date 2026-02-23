@@ -123,6 +123,12 @@ func (s *server) handleIncoming(conn *websocket.Conn, raw []byte) {
 	}
 }
 
+func (s *server) shutdown() {
+	for conn := range s.clients {
+		conn.Close()
+	}
+}
+
 func applyStripRouting(vm *voicemeeter.Remote, index int, param string, val bool) bool {
 	switch param {
 	case "a1":
