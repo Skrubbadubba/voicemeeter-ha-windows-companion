@@ -10,6 +10,8 @@ import (
 //go:embed iconwin.ico
 var iconData []byte
 
+var Version = "dev" // overridden at build time
+
 func runTray() {
 	systray.Run(onReady, onExit)
 }
@@ -25,13 +27,13 @@ func onReady() {
 
 	mQuit := systray.AddMenuItem("Quit", "Stop the companion app")
 
+	mVersion := systray.AddMenuItem("Protocol Ver.: "+Version, "")
+	mVersion.Disable()
+
 	go func() {
-		for {
-			select {
-			case <-mQuit.ClickedCh:
-				log.Println("Quit requested from tray")
-				systray.Quit()
-			}
+		for range mQuit.ClickedCh {
+			log.Println("Quit requested from tray")
+			systray.Quit()
 		}
 	}()
 }

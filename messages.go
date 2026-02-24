@@ -26,10 +26,11 @@ type busState struct {
 }
 
 type stateMsg struct {
-	Type   string       `json:"type"`
-	Kind   string       `json:"kind"`
-	Strips []stripState `json:"strips"`
-	Buses  []busState   `json:"buses"`
+	Type     string       `json:"type"`
+	Kind     string       `json:"kind"`
+	Strips   []stripState `json:"strips"`
+	Buses    []busState   `json:"buses"`
+	Protocol string       `json:protocol`
 }
 
 type updateMsg struct {

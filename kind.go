@@ -16,7 +16,7 @@ type kind struct {
 }
 
 var kinds = map[string]kind{
-	"basic":  {name: "basic",  strips: 3, buses: 2, buttons: 80, physicalStrips: 2},
+	"basic":  {name: "basic", strips: 3, buses: 2, buttons: 80, physicalStrips: 2},
 	"banana": {name: "banana", strips: 5, buses: 5, buttons: 80, physicalStrips: 3},
 	"potato": {name: "potato", strips: 8, buses: 8, buttons: 80, physicalStrips: 5},
 }

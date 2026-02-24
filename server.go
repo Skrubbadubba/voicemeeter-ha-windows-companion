@@ -12,6 +12,8 @@ import (
 
 const addr = ":27001"
 
+const PROTOCOL_VER = "0.1"
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
@@ -258,10 +260,11 @@ func (s *server) buildStateMsg() stateMsg {
 	}
 
 	return stateMsg{
-		Type:   "state",
-		Kind:   s.k.name,
-		Strips: strips,
-		Buses:  buses,
+		Type:     "state",
+		Kind:     s.k.name,
+		Strips:   strips,
+		Buses:    buses,
+		Protocol: PROTOCOL_VER,
 	}
 }
 
