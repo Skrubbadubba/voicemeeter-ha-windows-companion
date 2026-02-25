@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/onyx-and-iris/voicemeeter/v2"
@@ -102,7 +103,7 @@ func (s *server) broadcast(msg any) {
 }
 
 func (s *server) handleIncoming(conn *websocket.Conn, raw []byte) {
-	// Decode just the type field first.
+	// Decode just the type field first. vm
 	var base struct {
 		Type string `json:"type"`
 	}
@@ -121,14 +122,28 @@ func (s *server) handleIncoming(conn *websocket.Conn, raw []byte) {
 		log.Printf("Recieved JSON: %v", msg)
 		s.applySetMessage(msg)
 	default:
+		log.Printf("Recieved Message: %s", raw)
 		// Protocol says unknown types are silently ignored.
 	}
 }
 
 func (s *server) shutdown() {
+	log.Printf("sending close messaages to ws clients")
+	deadline := time.Now().Add(time.Minute)
+	s.mu.Lock()
+	for conn := range s.clients {
+		conn.WriteControl(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+			deadline,
+		)
+	}
+	time.Sleep(1 * time.Second)
 	for conn := range s.clients {
 		conn.Close()
 	}
+	s.mu.Unlock()
+
 }
 
 func applyStripRouting(vm *voicemeeter.Remote, index int, param string, val bool) bool {

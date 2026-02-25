@@ -9,7 +9,7 @@ import (
 	// "slices"
 	"syscall"
 
-	// "fyne.io/systray"
+	"fyne.io/systray"
 	"github.com/onyx-and-iris/voicemeeter/v2"
 )
 
@@ -30,6 +30,9 @@ func runCore() {
 	log.Printf("Connected to %s (%d strips, %d buses, %d buttons)", k.name, k.strips, k.buses, k.buttons)
 
 	server := newServer(vmr, k)
+	if server == nil {
+		log.Printf("server pointer is nil")
+	}
 	globalServer = server
 
 	go server.start()
@@ -40,19 +43,17 @@ func runCore() {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		<-quit
 		log.Printf("Control Event registered")
-		onExit()
+		systray.Quit()
 	}()
 
 	runTray()
 }
 
 func onExit() {
+	log.Printf("shutting down ws server")
+	globalServer.shutdown()
 	log.Println("Shutting down...")
-	if globalVMR != nil {
-		globalVMR.Logout()
-	}
-	if globalServer != nil {
-		globalServer.shutdown()
-	}
+
+	// Dont call logout on voicemeeter here, it panics. Maybe a bug in the library
 	os.Exit(0)
 }
