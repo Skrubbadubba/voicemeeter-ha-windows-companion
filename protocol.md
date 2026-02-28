@@ -1,6 +1,6 @@
 # Voicemeeter Companion App — WebSocket Protocol
 
-Note that this document is simply for me to note down and help me not forget the protocol. I may or may not forget to update. The source of truth is the code! Integration - companion compatibility is based on the communicated version.
+Note that this document is simply for me to note down and help me not forget the protocol. I may or may not forget to update. The source of truth is the code!
 
 ## Transport
 
