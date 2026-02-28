@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"fmt"
 	"log"
 
 	"fyne.io/systray"
@@ -9,8 +10,6 @@ import (
 
 //go:embed ha-vm-square-source.ico
 var iconData []byte
-
-var Version = "dev" // overridden at build time
 
 func runTray() {
 	systray.Run(onReady, onExit)
@@ -27,7 +26,7 @@ func onReady() {
 
 	mQuit := systray.AddMenuItem("Quit", "Stop the companion app")
 
-	mVersion := systray.AddMenuItem("Protocol Ver.: "+Version, "")
+	mVersion := systray.AddMenuItem(fmt.Sprintf("Protocol Ver.: %s", PROTOCOL_VER), "")
 	mVersion.Disable()
 
 	go func() {

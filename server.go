@@ -11,9 +11,9 @@ import (
 	"github.com/onyx-and-iris/voicemeeter/v2"
 )
 
-const addr = ":27001"
+const ADDR = ":27001"
 
-const PROTOCOL_VER = "0.1"
+var PROTOCOL_VER = "1.0"
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
@@ -36,8 +36,8 @@ func newServer(vm *voicemeeter.Remote, k kind) *server {
 
 func (s *server) start() {
 	http.HandleFunc("/ws", s.handleConn)
-	log.Printf("WebSocket server listening on ws://localhost%s/ws", addr)
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	log.Printf("WebSocket server listening on ws://localhost%s/ws", ADDR)
+	if err := http.ListenAndServe(ADDR, nil); err != nil {
 		log.Fatalf("WebSocket server error: %v", err)
 	}
 }

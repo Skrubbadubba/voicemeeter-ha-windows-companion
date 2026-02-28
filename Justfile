@@ -12,7 +12,7 @@ build-release version:
     go build -ldflags "-X main.Version={{version}}" -o dist/voicemeeter-companion-{{version}}.exe .
 
 run:
-    go run . --foreground
+    go run -ldflags "-X main.PROTOCOL_VER=dev" . 
 
 clean:
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue dist
