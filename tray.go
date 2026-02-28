@@ -7,7 +7,7 @@ import (
 	"fyne.io/systray"
 )
 
-//go:embed iconwin.ico
+//go:embed ha-vm-square-source.ico
 var iconData []byte
 
 var Version = "dev" // overridden at build time
