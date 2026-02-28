@@ -30,7 +30,7 @@ type stateMsg struct {
 	Kind     string       `json:"kind"`
 	Strips   []stripState `json:"strips"`
 	Buses    []busState   `json:"buses"`
-	Protocol string       `json:protocol`
+	Protocol string       `json:"protocol"`
 }
 
 type updateMsg struct {
