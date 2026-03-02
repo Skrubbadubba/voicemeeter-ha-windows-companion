@@ -112,6 +112,12 @@ func (s *server) handleIncoming(conn *websocket.Conn, raw []byte) {
 		return
 	}
 
+	if s.vmr == nil {
+		log.Printf("voicemeeter not connected, ignoring message")
+		// TODO: try reconnecting here
+		return
+	}
+
 	switch base.Type {
 	case "set":
 		var msg setMsg

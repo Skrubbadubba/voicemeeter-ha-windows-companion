@@ -9,5 +9,6 @@ require (
 	github.com/jwfergus/winsystray v0.0.0-20200612115431-12d8dc7aa265 // indirect
 	github.com/onyx-and-iris/voicemeeter/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 )

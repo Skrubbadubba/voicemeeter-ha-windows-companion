@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"os/signal"
 
@@ -21,10 +22,11 @@ func main() {
 }
 
 func runCore() {
-	vmr, k, err := detectKind()
-	if err != nil {
-		log.Fatal(err)
+	vmr, k, err := tryConnectVM(0 * time.Minute)
+	if err == nil && vmr != nil {
+		log.Println("Successfully connected to Voicemeeter!")
 	}
+
 	globalVMR = vmr
 
 	log.Printf("Connected to %s (%d strips, %d buses, %d buttons)", k.name, k.strips, k.buses, k.buttons)
@@ -34,9 +36,13 @@ func runCore() {
 		log.Printf("server pointer is nil")
 	}
 	globalServer = server
-
 	go server.start()
-	go startPolling(vmr, server)
+
+	isPolling := false
+	if vmr != nil {
+		go startPolling(vmr, server)
+		isPolling = true
+	}
 
 	go func() {
 		quit := make(chan os.Signal, 1)
@@ -46,7 +52,20 @@ func runCore() {
 		systray.Quit()
 	}()
 
-	runTray()
+	runTray(func() {
+		if isPolling {
+			log.Println("already polling")
+			return
+		}
+		vmr, _, err := tryConnectVM(2 * time.Minute)
+		if err != nil {
+			log.Printf("reconnection failed")
+			return
+		}
+		go startPolling(vmr, server)
+		isPolling = true
+
+	})
 }
 
 func onExit() {
