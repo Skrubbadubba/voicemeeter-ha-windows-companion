@@ -18,11 +18,7 @@ var globalVMR *voicemeeter.Remote
 var globalServer *server
 
 func main() {
-	runCore()
-}
-
-func runCore() {
-	vmr, k, err := tryConnectVM(0 * time.Minute)
+	vmr, k, err := tryConnectVM(2 * time.Minute)
 	if err == nil && vmr != nil {
 		log.Println("Successfully connected to Voicemeeter!")
 	}
@@ -38,10 +34,9 @@ func runCore() {
 	globalServer = server
 	go server.start()
 
-	isPolling := false
+	poller := NewPoller(vmr)
 	if vmr != nil {
-		go startPolling(vmr, server)
-		isPolling = true
+		poller.start(server)
 	}
 
 	go func() {
@@ -52,20 +47,32 @@ func runCore() {
 		systray.Quit()
 	}()
 
-	runTray(func() {
-		if isPolling {
-			log.Println("already polling")
-			return
-		}
-		vmr, _, err := tryConnectVM(2 * time.Minute)
-		if err != nil {
-			log.Printf("reconnection failed")
-			return
-		}
-		go startPolling(vmr, server)
-		isPolling = true
-
-	})
+	runTray(
+		// callback for reconnecting
+		func() {
+			if poller.isPolling {
+				log.Println("Already polling, stopping")
+				poller.stop()
+			}
+			if vmr != nil {
+				log.Printf("Voicemeeter already connected, logging out")
+				if err := vmr.Logout(); err != nil {
+					log.Fatalf("Fatal: could not logout from voicemeeter")
+				}
+			}
+			vmr, k, err := tryConnectVM(2 * time.Minute)
+			if err != nil || vmr == nil {
+				log.Println("Could not reconnect to Voicemeeter")
+				return
+			}
+			log.Printf("Reconnected to voicemeeter, starting polling and sending state messages")
+			poller.vmr = vmr
+			server.vmr = vmr
+			server.k = k
+			for conn := range server.clients {
+				server.sendState(conn)
+			}
+		})
 }
 
 func onExit() {

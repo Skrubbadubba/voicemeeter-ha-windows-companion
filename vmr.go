@@ -31,7 +31,7 @@ func tryConnectVM(timeout time.Duration) (*voicemeeter.Remote, kind, error) {
 	var k kind
 	var err error
 
-	deadline := time.Now().Add(0 * time.Minute)
+	deadline := time.Now().Add(timeout)
 
 	for {
 		vmr, k, err = detectKind()
@@ -87,8 +87,18 @@ func connect(kindName string) (*voicemeeter.Remote, error) {
 	return vm, nil
 }
 
+func tryReconnectVM(vmr *voicemeeter.Remote) error {
+	if err := vmr.Login(); err != nil {
+		rawLogout()
+		return err
+	}
+	return nil
+}
+
 func rawLogout() {
-	// 1. Replicate the library's internal behavior: Find Voicemeeter in the Windows Registry
+	// The voicemeeter remote dll demands you logout after a failed login,
+	// however onyx-and-iris/voicemeeter/v2 returns nil for the remote object
+	// on error, not allowing us to do so.
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\VB:Voicemeeter {17359A74-1236-5467}`, registry.QUERY_VALUE)
 	if err != nil {
 		k, err = registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VB:Voicemeeter {17359A74-1236-5467}`, registry.QUERY_VALUE)

@@ -2,30 +2,83 @@ package main
 
 import (
 	"log"
+	"sync"
 
 	"github.com/onyx-and-iris/voicemeeter/v2"
 )
 
-func startPolling(vm *voicemeeter.Remote, srv *server) {
-	events := make(chan string, 8)
-	vm.Register(events)
-	vm.EventAdd("pdirty", "mdirty")
+type Poller struct {
+	mu           sync.Mutex
+	isPolling    bool
+	quit         chan struct{}
+	disconnected chan struct{}
+	vmr          *voicemeeter.Remote
+}
 
-	cache := snapshot(vm)
+func NewPoller(vmr *voicemeeter.Remote) *Poller {
+	return &Poller{
+		vmr: vmr,
+	}
+}
+
+func (p *Poller) start(srv *server) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if p.isPolling {
+		log.Println("poller already running")
+		return
+	}
+
+	p.isPolling = true
+	p.quit = make(chan struct{})
+	events := make(chan string, 8)
+	p.vmr.Register(events)
+	p.vmr.EventAdd("pdirty", "mdirty")
+
+	cache := snapshot(p.vmr)
 	log.Println("Listening for changes...")
 
-	for event := range events {
-		switch event {
-		case "pdirty":
-			fresh := snapshot(vm)
-			broadcastDiff(srv, cache, fresh)
-			cache = fresh
-		case "mdirty":
-			fresh := snapshot(vm)
-			diffButtons(cache.buttons, fresh.buttons)
-			cache = fresh
+	go func() {
+		for {
+			select {
+			case <-p.quit:
+				log.Println("Poller stopped.")
+				return
+
+			case event, ok := <-events:
+				if !ok {
+					log.Printf("Poller disconnected")
+					return
+				}
+
+				switch event {
+				case "pdirty":
+					fresh := snapshot(p.vmr)
+					broadcastDiff(srv, cache, fresh)
+					cache = fresh
+				case "mdirty":
+					fresh := snapshot(p.vmr)
+					diffButtons(cache.buttons, fresh.buttons)
+					cache = fresh
+				}
+			}
 		}
+	}()
+}
+
+func (p *Poller) stop() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	if !p.isPolling {
+		return
 	}
+
+	close(p.quit)
+
+	p.vmr.EventRemove("pdirty", "mdirty")
+	p.isPolling = false
 }
 
 func broadcastDiff(srv *server, old, new vmCache) {
