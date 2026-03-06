@@ -251,6 +251,9 @@ func (s *server) applySetMessage(msg setMsg) {
 }
 
 func (s *server) buildStateMsg() stateMsg {
+	if s.vmr == nil {
+		return stateMsg{}
+	}
 	strips := make([]stripState, len(s.vmr.Strip))
 	for i, strip := range s.vmr.Strip {
 		strips[i] = stripState{
